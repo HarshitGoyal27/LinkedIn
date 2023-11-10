@@ -97,6 +97,7 @@ async function scrapEachPost(arr_li,page,browser){
     // Extract the data you need from the postElement
     obj.name_of_profile = await postElement.$eval('div[class="full-height"]>div>div>div>div>div span[dir="ltr"]', element => element.textContent.trim());
     obj.post_content = await postElement.$eval('div[class="full-height"]>div>div>div div[dir="ltr"]>span.break-words>span>span[dir="ltr"]', element => element.textContent.trim());
+    obj.time_posted=await postElement.$eval('div[class="full-height"]>div>div>div>div>div>a>span>div>span>span',element=>element.textContent.trim());
     scrapped_data.push(obj);
     convertObjtoJSON(scrapped_data);
     console.log(obj);
