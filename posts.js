@@ -3,6 +3,8 @@ const axios=require('axios');
 const postsData = require('./profile'); // Import the postsData module
 const fs=require('fs');
 let posts;
+let cnt=0;
+let scrapped_data=[];
 const fun=async() => {
   try{
     const browser = await puppeteer.launch({ headless: false,args:['--start-maximized'],defaultViewport:null});
@@ -46,13 +48,15 @@ const filterData=async(page,browser)=>{
     }
 }
 const getLatestPosts=async(page,browser)=>{
-  let cnt=0;
   try{
     await page.waitForTimeout(1000);
     await page.waitForSelector('.scaffold-finite-scroll__content');
     let postContainer=await page.$('.scaffold-finite-scroll__content');//we have to scroll down and get div
     let postArrDiv=await postContainer.$$('.scaffold-finite-scroll__content>div');//always length is 2 at the starting and them  increase after scroll down
-    if(cnt===0){scrapPostData(page,browser,postArrDiv[0]);}
+    if(cnt===0){
+      scrapPostData(page,browser,postArrDiv[0]);
+      cnt=1;
+    }
     else{
       scrapPostData(page,browser,postArrDiv[postArrDiv.length-1]);
     }
@@ -79,13 +83,33 @@ async function scrollDownToEnd(page,browser) {
     previousHeight=currentHeight;
   }
 }
-async function scrapPostData(page,browser,postDiv){//scrap data into JSON format
+async function scrapPostData(page,browser,postDiv){//div of li
   await page.waitForTimeout(1000);
   let arr_li = await postDiv.$$('.scaffold-finite-scroll__content>div>div>ul>li>div>div[class="full-height"]');
-  console.log(arr_li);
   console.log(arr_li.length);
-  
-  scrollDownToEnd(page,browser);
+  console.log(arr_li);
+  scrapEachPost(arr_li,page,browser);
+  //scrollDownToEnd(page,browser);
+}
+async function scrapEachPost(arr_li,page,browser){
+  const promises = arr_li.map(async (postElement) => {
+    let obj = {};
+    // Extract the data you need from the postElement
+    obj.name_of_profile = await postElement.$eval('div[class="full-height"]>div>div>div>div>div span[dir="ltr"]', element => element.textContent.trim());
+    obj.post_content = await postElement.$eval('div[class="full-height"]>div>div>div div[dir="ltr"]>span.break-words>span>span[dir="ltr"]', element => element.textContent.trim());
+    scrapped_data.push(obj);
+    convertObjtoJSON(scrapped_data);
+    console.log(obj);
+  });
+
+  // Wait for all promises to resolve before calling scrollDownToEnd
+  await Promise.all(promises);
+
+  scrollDownToEnd(page, browser);
+}
+function convertObjtoJSON(scrapped_data){
+  let str=JSON.stringify(scrapped_data);
+  fs.writeFileSync('./Example.json',str);
 }
 
 module.exports={
