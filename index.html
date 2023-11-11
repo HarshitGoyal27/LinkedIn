@@ -1,0 +1,48 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Run Puppeteer Script</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script>
+  <style>
+    div{
+        position:relative;
+        left:40%;
+        top:50vh;
+    }
+  </style>
+</head>
+<body>
+    <div>
+       <input type="text" id="input" onchange="getText()">
+       <button id="runScriptButton">Run Puppeteer</button>
+    </div>
+  <script>
+    let searchData='';
+    function getText(){
+        let ele=document.getElementById('input').value;
+        //console.log(ele);
+        searchData=ele;
+    }
+    document.getElementById('runScriptButton').addEventListener('click', async () => {
+        try {
+            const response = await axios.post('http://localhost:3000/run-script',{
+            data:searchData
+            });
+            if (response.ok) {
+            alert('Puppeteer script executed successfully.');
+            } else {
+            alert('Error running Puppeteer script.');
+            }
+        } catch (error) {
+            console.error('Network error:', error);
+            alert('Network error. Check console for details.');
+        }
+        });
+    
+  </script>
+</body>
+</html>
